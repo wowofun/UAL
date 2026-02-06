@@ -1,0 +1,105 @@
+syntax = "proto3";
+
+package ual;
+
+// UAL 核心消息结构
+message UALMessage {
+  Header header = 1;
+  oneof payload {
+      Graph content = 2;
+      Handshake handshake = 4;
+  }
+  Signature signature = 3;
+}
+
+message Header {
+  string sender_id = 1;
+  string receiver_id = 2;
+  int64 timestamp = 3;
+  string message_id = 4;
+  string protocol_version = 5;
+  // 语义哈希，用于压缩长指令
+  string semantic_hash = 6;
+  // 是否是 Delta 增量更新
+  bool is_delta = 7;
+  // Delta 压缩基准哈希 (上一帧的 semantic_hash)
+  string parent_hash = 8;
+}
+
+message Graph {
+  repeated Node nodes = 1;
+  repeated Edge edges = 2;
+  // 全局上下文引用 ID (用于 KV Cache)
+  string context_id = 3;
+  // Delta 模式下：被移除的节点 ID 列表
+  repeated string removed_node_ids = 4;
+}
+
+message Node {
+  string id = 1; // 节点唯一标识
+  
+  // 语义 ID (来自 Universal Atlas)
+  // 使用 uint32 存储 hex ID, e.g., 0x0A1
+  uint32 semantic_id = 2;
+  
+  // 节点类型
+  enum NodeType {
+    UNKNOWN = 0;
+    ENTITY = 1;    // 实体 (名词)
+    ACTION = 2;    // 动作 (动词)
+    PROPERTY = 3;  // 属性 (形容词/副词)
+    LOGIC = 4;     // 逻辑谓词 (If/Then/Else)
+    MODAL = 5;     // 模态 (Must/Should/Can)
+    VALUE = 6;     // 具体数值
+    DATA_REF = 7;  // 数据引用 (多模态)
+  }
+  NodeType type = 3;
+  
+  // 节点具体值 (如果是 VALUE 类型)
+  oneof value {
+    string str_val = 4;
+    double num_val = 5;
+    bool bool_val = 6;
+    bytes blob_val = 7; // 原始数据或 Embeddings
+    Vector embedding = 8;
+  }
+  
+  // 动态扩展：如果 semantic_id 未知，提供描述子图
+  Graph definition = 9;
+}
+
+message Edge {
+  string source_id = 1;
+  string target_id = 2;
+  
+  // 关系类型
+  enum RelationType {
+    DEPENDS_ON = 0; // 依赖
+    NEXT = 1;       // 顺序
+    ATTRIBUTE = 2;  // 属性
+    ARGUMENT = 3;   // 参数
+    CONDITION = 4;  // 条件
+  }
+  RelationType relation = 3;
+  float weight = 4; // 权重/置信度
+}
+
+message Vector {
+  repeated float values = 1;
+  string model_name = 2; // e.g., "clip-vit-b-32"
+}
+
+message Signature {
+  bytes sign_data = 1;
+  string algorithm = 2;
+}
+
+// 握手协议
+message Handshake {
+  string agent_id = 1;
+  repeated string capabilities = 2; // 支持的能力
+  string public_key = 3;
+  int32 compute_power = 4; // 算力声明
+  // 动态方言协商
+  repeated string namespaces = 5; // e.g., "medical_v1", "warehouse_v2"
+}
