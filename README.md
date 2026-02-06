@@ -1,99 +1,119 @@
-# UAL (Universal Agent Language / 通用智能体语言)
+# 🌐 UAL: The Universal Agent Language
 
-## 1. 项目愿景 (Vision)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Version](https://img.shields.io/badge/version-0.2.0-green.svg)](https://github.com/wowofun/UAL)
 
-**核心目标**：建立一个开源、跨平台、极高压缩比的 AI 原生通信协议。让全球不同架构的机器人与智能体能够像人类使用英语一样，通过一种逻辑严密、无歧义的“机器母语”进行即时协作。
+> **The "Esperanto" for Artificial Intelligence.**  
+> **AI 智能体界的“世界语”。**
 
-UAL 旨在解决异构智能体之间的通信壁垒，通过语义编码架构 (Semantic Core) 和语义映射表 (Universal Atlas)，实现高效、精准的信息传递。
+---
 
-## 2. 技术规格 (Technical Specifications)
+## 📖 Introduction / 项目简介
 
-*   **语义编码**: 采用 Protocol Buffers 封装为有向无环图 (DAG)，摆脱线性文本束缚。
-*   **Universal Atlas**: 标准化 ID 映射 (e.g., 0xA1 = Move)，支持动态扩展。
-*   **极高压缩**: 语义哈希与 Delta Encoding (已实现)。
-*   **多模态支持**: 支持 CLIP/DINOv2 向量嵌入 (已实现)。
-*   **动态方言**: 支持命名空间与行业字典协商 (已实现)。
-*   **可视化**: 支持拓扑图生成与不确定性 (Probability Cloud) 可视化 (已实现)。
-*   **全场景通用**: 
-    *   **递归语义元**: 支持 Zero-shot 概念定义 (e.g., I + WANT + NOT = Refuse) (已实现)。
-    *   **环境共鸣**: 内置 3D 坐标系与物理环境引用 (已实现)。
-    *   **情感向量**: 支持 Urgency 与语气 (Command/Suggestion) 标记 (已实现)。
-    *   **自我进化**: 集成 LLM 自动翻译插件，动态扩展词汇 (已实现)。
-*   **安全**: 内置签名验证与指令沙箱机制。
+**English**:  
+UAL (Universal Agent Language) is a groundbreaking open-source protocol designed to bridge the gap between heterogeneous AI agents. Unlike traditional JSON/XML APIs, UAL uses a **semantic-first** approach with a Directed Acyclic Graph (DAG) structure, enabling robots, IoT devices, and software agents to communicate with **90% less bandwidth** and **zero ambiguity**.
 
-## 3. 安装 (Installation)
+**中文**:  
+UAL (通用智能体语言) 是一个突破性的开源协议，旨在打破不同 AI 智能体之间的通信壁垒。与传统的 JSON/XML API 不同，UAL 采用**语义优先**的 DAG（有向无环图）结构，使机器人、IoT 设备和软件智能体能够以**节省 90% 带宽**的方式进行**零歧义**沟通。
 
-### 前置要求
-*   Python 3.8+
-*   Protobuf Compiler (可选，已包含生成的代码)
+---
 
-### 安装步骤
+## ✨ Key Features / 核心特性
 
-1. 克隆仓库:
-   ```bash
-   git clone https://github.com/wowofun/UAL.git
-   cd UAL
-   ```
+| Feature | Description (English) | 说明 (中文) |
+| :--- | :--- | :--- |
+| **🧠 Recursive Primitives** | Define new concepts zero-shot (e.g., `NOT + HEAR = Silence`). | **递归语义元**: 支持零样本定义新概念 (如 `不 + 听 = 沉默`)。 |
+| **📉 Ultra Compression** | Semantic Hashing & Delta Encoding reduce payload size by 90%. | **极致压缩**: 语义哈希与增量编码可减少 90% 的载荷大小。 |
+| **🌍 Environmental Frame** | Built-in 3D coordinates & physical context awareness. | **环境共鸣**: 内置 3D 坐标系与物理环境感知能力。 |
+| **🔌 Universal Gateway** | Native adapters for ROS2 & MQTT (IoT ready). | **万能网关**: 原生支持 ROS2 与 MQTT 适配，即插即用。 |
+| **🛡️ Self-Correction** | Error Correction Code (ECC) ensures robustness in noisy networks. | **自动纠错**: ECC 纠错码确保在噪声网络中的通信健壮性。 |
+| **🎨 Dynamic Dialect** | Namespace support for vertical domains (Medical, Industrial). | **动态方言**: 支持特定领域（医疗、工业）的命名空间扩展。 |
 
-2. 安装依赖:
-   ```bash
-   pip install -r requirements.txt
-   # 注意: 可视化功能需要 matplotlib
-   ```
+---
 
-3. (可选) 重新编译协议:
-   ```bash
-   python3 -m grpc_tools.protoc -I spec --python_out=src/ual spec/ual.proto
-   ```
+## 🚀 Quick Start / 快速开始
 
-## 4. 快速开始 (Hello World)
+### 1. Installation / 安装
 
-以下示例展示了如何将自然语言指令压缩为 UAL 二进制并还原。
+```bash
+# Clone the repository / 克隆仓库
+git clone https://github.com/wowofun/UAL.git
+cd UAL
+
+# Install dependencies / 安装依赖
+pip install -r requirements.txt
+```
+
+### 2. The "Great Demo" / 全场景演示
+
+To prove UAL's universality, we have prepared a single script that simulates three distinct scenarios: **Smart Home**, **Industrial Factory**, and **Abstract Debate**.
+为了证明 UAL 的通用性，我们准备了一个脚本，同时模拟三个截然不同的场景：**智能家居**、**工业工厂**和**抽象辩论**。
+
+```bash
+python3 examples/the_great_demo.py
+```
+
+### 3. "Hello World" Code / 代码示例
 
 ```python
 from ual import UAL
 
-# 初始化智能体
-agent = UAL(agent_id="Agent_001")
+# Initialize Agents / 初始化智能体
+sender = UAL("Robot_A")
+receiver = UAL("Robot_B")
 
-# 1. 握手 (Handshake)
-handshake_msg = agent.create_handshake(capabilities=["ual_v1", "move"])
-# 发送 handshake_msg 给其他 Agent...
+# 1. Encode Command (Natural Language -> Compact Binary)
+# 编码: 自然语言 -> 紧凑二进制
+cmd = "Move to Kitchen and clean the floor"
+binary = sender.encode(cmd)
 
-# 2. 编码: 自然语言 -> UAL Binary
-command = "Drone move to Target"
-binary_data = agent.encode(command)
-print(f"Encoded size: {len(binary_data)} bytes")
+print(f"📦 Payload Size: {len(binary)} bytes")
 
-# 3. 解码: UAL Binary -> 结构化语义
-receiver = UAL(agent_id="Agent_002")
-result = receiver.decode(binary_data)
-
-print(f"Meaning: {result['natural_language']}")
-# Output: Meaning: move drone target
+# 2. Decode (Compact Binary -> Structured Logic)
+# 解码: 紧凑二进制 -> 结构化语义
+msg = receiver.decode(binary)
+print(f"📩 Received: {msg['natural_language']}")
 ```
 
-## 5. 示例 Demo
+---
 
-*   **基础通信**: `python3 examples/drone_demo.py` (无人机协同)
-*   **进阶特性**: `python3 examples/advanced_demo.py` (增量压缩与多模态)
-*   **可视化与不确定性**: `python3 examples/visualizer_demo.py` (概率云可视化)
-*   **全场景通用性**: `python3 examples/generalization_demo.py` (递归语义与自我进化)
+## 🛠️ Ecosystem Tools / 生态工具
 
-该示例模拟了两个无人机 (Leader/Follower) 之间的通信日志，展示了握手、任务分配、状态同步等过程。
+### 📊 Live Dashboard / 实时监控看板
+Monitor your agent network in real-time with our web-based dashboard.
+使用基于 Web 的仪表盘实时监控您的智能体网络。
 
-## 6. 项目结构
+```bash
+python3 examples/dashboard.py
+# Visit http://localhost:5000
+```
 
-*   `/spec`: Protocol Buffers 协议定义 (`ual.proto`)
-*   `/src`: 核心源代码 (Python 实现)
-    *   `core.py`: 编解码逻辑 (Encode/Decode/Validate)
-    *   `atlas.py`: 语义映射表与动态命名空间
-    *   `state.py`: 状态追踪与增量压缩 (StateTracker)
-    *   `primitives.py`: 递归语义元定义
-    *   `translator.py`: 自动翻译插件 (SDK 自我进化)
-    *   `visualizer.py`: 拓扑可视化工具
-    *   `cli.py`: 命令行调试工具
-*   `/examples`: 示例代码
+### 📘 Auto-Documentation / 自动文档生成
+Generate the latest API reference based on your current codebase.
+基于当前代码库生成最新的 API 参考文档。
+
+```bash
+python3 tools/doc_gen.py
+```
 
 ---
-*License: MIT*
+
+## 📂 Project Structure / 项目结构
+
+*   `src/ual/core.py`: **Core Protocol** (Encoding/Decoding) / 核心协议
+*   `src/ual/atlas.py`: **Semantic Registry** (ID Mappings) / 语义注册表
+*   `src/ual/ecc.py`: **Error Correction** / 纠错机制
+*   `src/ual/gateway.py`: **ROS2/MQTT Adapters** / 网关适配器
+*   `spec/ual.proto`: **Protobuf Definition** / 协议定义文件
+
+---
+
+## 📜 License / 许可证
+
+Distributed under the MIT License. See `LICENSE` for more information.
+本项目基于 MIT 许可证开源。
+
+---
+
+*Made with ❤️ by the UAL Community*
