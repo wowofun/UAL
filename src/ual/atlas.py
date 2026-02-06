@@ -40,6 +40,12 @@ class UniversalAtlas:
             0x0D1: "must",
             0x0D2: "should",
             0x0D3: "can",
+
+            # 元认知 (Meta-Cognition) - 0x0F0 range (Uncertainty)
+            0x0F1: "uncertainty", # 不确定性
+            0x0F2: "probability", # 概率
+            0x0F3: "confidence",  # 置信度
+            0x0F4: "belief",      # 信念
         }
         
         # 反向映射
@@ -62,6 +68,14 @@ class UniversalAtlas:
             }
         }
         self._active_namespaces: set[str] = set()
+
+    def register_dynamic_concept(self, id: int, concept: str):
+        """
+        运行时注册新概念 (用户扩展区)
+        """
+        self._dynamic_registry[id] = concept
+        # 更新反向映射 (简单处理，不做全量倒排)
+        # 实际应用中需要更复杂的双向索引管理
 
     def get_concept(self, semantic_id: int) -> Optional[str]:
         """根据 ID 获取概念"""

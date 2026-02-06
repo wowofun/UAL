@@ -24,6 +24,28 @@ message Header {
   bool is_delta = 7;
   // Delta 压缩基准哈希 (上一帧的 semantic_hash)
   string parent_hash = 8;
+  
+  // 情感与优先级
+  float urgency = 9; // 0.0 - 1.0 (0=Low, 1=Critical)
+  enum Style {
+    DEFAULT = 0;
+    REQUEST = 1;
+    COMMAND = 2;
+    SUGGESTION = 3;
+    ALERT = 4;
+  }
+  Style style = 10;
+  
+  // 环境共鸣层
+  EnvironmentalFrame env_frame = 11;
+}
+
+message EnvironmentalFrame {
+  string frame_id = 1; // e.g. "map_frame_01"
+  repeated float origin = 2; // [x, y, z]
+  repeated float orientation = 3; // [x, y, z, w] quaternion
+  string unit = 4; // e.g. "meter"
+  double timestamp = 5;
 }
 
 message Graph {

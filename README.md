@@ -13,6 +13,12 @@ UAL 旨在解决异构智能体之间的通信壁垒，通过语义编码架构 
 *   **极高压缩**: 语义哈希与 Delta Encoding (已实现)。
 *   **多模态支持**: 支持 CLIP/DINOv2 向量嵌入 (已实现)。
 *   **动态方言**: 支持命名空间与行业字典协商 (已实现)。
+*   **可视化**: 支持拓扑图生成与不确定性 (Probability Cloud) 可视化 (已实现)。
+*   **全场景通用**: 
+    *   **递归语义元**: 支持 Zero-shot 概念定义 (e.g., I + WANT + NOT = Refuse) (已实现)。
+    *   **环境共鸣**: 内置 3D 坐标系与物理环境引用 (已实现)。
+    *   **情感向量**: 支持 Urgency 与语气 (Command/Suggestion) 标记 (已实现)。
+    *   **自我进化**: 集成 LLM 自动翻译插件，动态扩展词汇 (已实现)。
 *   **安全**: 内置签名验证与指令沙箱机制。
 
 ## 3. 安装 (Installation)
@@ -32,6 +38,7 @@ UAL 旨在解决异构智能体之间的通信壁垒，通过语义编码架构 
 2. 安装依赖:
    ```bash
    pip install -r requirements.txt
+   # 注意: 可视化功能需要 matplotlib
    ```
 
 3. (可选) 重新编译协议:
@@ -68,11 +75,10 @@ print(f"Meaning: {result['natural_language']}")
 
 ## 5. 示例 Demo
 
-运行无人机协同示例：
-
-```bash
-python3 examples/drone_demo.py
-```
+*   **基础通信**: `python3 examples/drone_demo.py` (无人机协同)
+*   **进阶特性**: `python3 examples/advanced_demo.py` (增量压缩与多模态)
+*   **可视化与不确定性**: `python3 examples/visualizer_demo.py` (概率云可视化)
+*   **全场景通用性**: `python3 examples/generalization_demo.py` (递归语义与自我进化)
 
 该示例模拟了两个无人机 (Leader/Follower) 之间的通信日志，展示了握手、任务分配、状态同步等过程。
 
@@ -81,7 +87,12 @@ python3 examples/drone_demo.py
 *   `/spec`: Protocol Buffers 协议定义 (`ual.proto`)
 *   `/src`: 核心源代码 (Python 实现)
     *   `core.py`: 编解码逻辑 (Encode/Decode/Validate)
-    *   `atlas.py`: 语义映射表
+    *   `atlas.py`: 语义映射表与动态命名空间
+    *   `state.py`: 状态追踪与增量压缩 (StateTracker)
+    *   `primitives.py`: 递归语义元定义
+    *   `translator.py`: 自动翻译插件 (SDK 自我进化)
+    *   `visualizer.py`: 拓扑可视化工具
+    *   `cli.py`: 命令行调试工具
 *   `/examples`: 示例代码
 
 ---

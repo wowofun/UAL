@@ -18,6 +18,49 @@ class UAL:
         self.atlas = get_atlas()
         self.tracker = StateTracker()
 
+    def create_node(self, node_type, semantic_id: int = 0, id: str = None, value: Any = None) -> ual_pb2.Node:
+        """
+        创建一个节点
+        """
+        node = ual_pb2.Node()
+        node.id = id if id else str(uuid.uuid4())[:8]
+        node.type = node_type
+        if semantic_id:
+            node.semantic_id = semantic_id
+            
+        if value is not None:
+            if isinstance(value, str):
+                node.str_val = value
+            elif isinstance(value, (int, float)):
+                node.num_val = float(value)
+            elif isinstance(value, bool):
+                node.bool_val = value
+            elif isinstance(value, bytes):
+                node.blob_val = value
+                
+        return node
+
+    def create_edge(self, source_id: str, target_id: str, relation_type, weight: float = 1.0) -> ual_pb2.Edge:
+        """
+        创建一个边
+        """
+        edge = ual_pb2.Edge()
+        edge.source_id = source_id
+        edge.target_id = target_id
+        edge.relation = relation_type
+        edge.weight = weight
+        return edge
+
+    def create_graph(self, nodes: List[ual_pb2.Node], edges: List[ual_pb2.Edge], context_id: str = "") -> ual_pb2.Graph:
+        """
+        创建一个图
+        """
+        graph = ual_pb2.Graph()
+        graph.nodes.extend(nodes)
+        graph.edges.extend(edges)
+        graph.context_id = context_id
+        return graph
+
     def encode(self, 
                natural_language: str, 
                receiver_id: str = "broadcast",
