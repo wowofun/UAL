@@ -19,6 +19,16 @@ class StateTracker:
         
         # 记录上一帧的 Semantic Hash
         self.last_hashes: Dict[str, str] = {}
+        
+        # Generic state storage (for Studio visualization)
+        self.state: Dict[str, Any] = {}
+
+    def update(self, key: str, value: Any):
+        self.state[key] = value
+
+    def get(self, key: str) -> Optional[Any]:
+        return self.state.get(key)
+
 
     def get_node_hash(self, node: ual_pb2.Node) -> str:
         """计算单个节点的哈希"""
