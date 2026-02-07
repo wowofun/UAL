@@ -123,6 +123,20 @@ python3 examples/virtual_agent_demo.py
 
 ---
 
+## 🌈 全栈覆盖 (Full-Stack Support)
+
+| 平台 | 模块 | 实现语言 | 适用场景 |
+| :--- | :--- | :--- | :--- |
+| **云端/边缘** | `UAL-Python` | Python | LLM 编排、复杂推理、数据监控 |
+| **工业硬件** | `UAL-Tiny` | C / Rust | 传感器节点、执行器、单片机控制 |
+| **人机交互** | `UAL-Studio` | React/Flask | 无代码指令生成、可视化调试 |
+
+💡 **双轨演进策略**：
+1. **硬核底层 (UAL-Tiny)**: 专为 ESP32/STM32 等低算力设备设计。无堆内存分配 (No-heap)，仅需 <10KB RAM 即可解码复杂语义指令。
+2. **极致易用 (UAL-Studio)**: 提供 Node-RED 风格的 Web 编辑器，让非程序员也能通过拖拽生成 UAL 指令，并一键部署到硬件。
+
+---
+
 ## 🛠️ 生态工具
 
 ### ⚡ 性能对比 (Benchmark)
