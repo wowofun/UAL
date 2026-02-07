@@ -96,8 +96,7 @@ class UAL:
                           metadata: Dict[str, Any],
                           receiver_id: str = "broadcast",
                           context_id: str = "",
-                          use_delta: bool = False,
-                          pure_binary: bool = False) -> bytes:
+                          use_delta: bool = False) -> bytes:
         """
         Encode from pre-parsed graph structure.
         """
@@ -148,60 +147,15 @@ class UAL:
         
         # Content
         msg.content.CopyFrom(final_graph)
-
-        # --- PureBinary Optimization ---
-        if pure_binary:
-            # 1. Strip Header Metadata
-            msg.header.sender_id = ""
-            msg.header.receiver_id = ""
-            msg.header.message_id = "" 
-            # msg.header.protocol_version = "" # Optional: Keep for compatibility or strip
-            msg.header.ClearField("env_frame") # Strip env frame metadata
-            
-            # 2. Optimize Node IDs (Map UUID -> "0", "1", "2")
-            id_map = {}
-            # We must iterate and modify in place. 
-            # Note: RepeatedCompositeFieldContainer doesn't support direct assignment well, so we modify fields.
-            for i, node in enumerate(msg.content.nodes):
-                short_id = str(i)
-                id_map[node.id] = short_id
-                node.id = short_id
-                
-                # Strip descriptive strings
-                node.str_val = ""
-                # Clear definition graph if present (assumed pre-agreed semantics)
-                if node.HasField("definition"):
-                    node.ClearField("definition")
-            
-            # 3. Update Edges with new IDs
-            for edge in msg.content.edges:
-                if edge.source_id in id_map:
-                    edge.source_id = id_map[edge.source_id]
-                if edge.target_id in id_map:
-                    edge.target_id = id_map[edge.target_id]
-
-            # 4. Extreme Compression (Strip Protocol Overhead)
-            # In PureBinary, we assume the transport layer handles security/ordering or it's a raw link.
-            msg.header.protocol_version = "" 
-            msg.header.semantic_hash = "" # Strip hash
-            msg.header.timestamp = 0 # Strip timestamp (if 0 is default)
-            msg.header.ClearField("urgency")
-            msg.header.ClearField("style")
-
-        # Semantic Hash (Only if not stripped)
-        if not pure_binary:
-             msg.header.semantic_hash = compute_semantic_hash(msg.content.SerializeToString(deterministic=True))
+        
+        # Semantic Hash
+        msg.header.semantic_hash = compute_semantic_hash(msg.content.SerializeToString(deterministic=True))
         
         # Signature
         payload_bytes = msg.content.SerializeToString(deterministic=True)
         sign_payload = msg.header.SerializeToString(deterministic=True) + payload_bytes
-        
-        if pure_binary:
-             msg.signature.ClearField("signature")
-             msg.signature.ClearField("algorithm")
-        else:
-             msg.signature.signature = sign_message(sign_payload, self.private_key)
-             msg.signature.algorithm = "sha256_hmac_mock"
+        msg.signature.signature = sign_message(sign_payload, self.private_key)
+        msg.signature.algorithm = "sha256_hmac_mock"
         
         return msg.SerializeToString()
 
@@ -210,8 +164,7 @@ class UAL:
                receiver_id: str = "broadcast",
                context_id: str = "",
                embedding_map: Dict[str, List[float]] = None,
-               use_delta: bool = False,
-               pure_binary: bool = False) -> bytes:
+               use_delta: bool = False) -> bytes:
         """
         将自然语言转换为 UAL 二进制格式 (Protobuf)
         
@@ -221,7 +174,6 @@ class UAL:
             context_id: 上下文 ID
             embedding_map: 词汇到向量的映射 {"obstacle": [0.1, 0.2...]}
             use_delta: 是否启用增量压缩
-            pure_binary: 是否启用纯二进制极致压缩模式
         """
         # 1. Parse Natural Language -> Semantic Graph
         nodes, edges, metadata = self.parser.parse(natural_language)
@@ -239,154 +191,111 @@ class UAL:
                     vec.model_name = "clip-mock"
                     node.embedding.CopyFrom(vec)
         
-        return self.encode_from_graph(nodes, edges, metadata, receiver_id, context_id, use_delta, pure_binary)
+        return self.encode_from_graph(nodes, edges, metadata, receiver_id, context_id, use_delta)
 
     def decode(self, ual_binary: bytes) -> Dict[str, Any]:
         """
         将 UAL 二进制解码为结构化数据/自然语言描述
         """
-        # 1. Parse Protobuf
         msg = ual_pb2.UALMessage()
-        try:
-            msg.ParseFromString(ual_binary)
-        except Exception as e:
-            raise ValueError(f"Protobuf Decode Failed: {e}")
-            
-        # 2. Verify Signature (if present)
-        if msg.signature.signature:
-            payload_bytes = msg.content.SerializeToString(deterministic=True)
-            sign_payload = msg.header.SerializeToString(deterministic=True) + payload_bytes
-            if not verify_signature(payload_bytes, msg.signature.signature, "dummy_key"): # Use Payload only for MVP signature check logic? 
-                # Note: encode signs Header + Payload. Verify should match.
-                # But here we verify signature on Header+Payload?
-                # My encode: sign_payload = header + payload.
-                # Verify logic in utils.py expects content + key.
-                # Let's verify correctly.
-                check_payload = msg.header.SerializeToString(deterministic=True) + payload_bytes
-                if not verify_signature(check_payload, msg.signature.signature, "dummy_key"):
-                     # In MVP we might just log warning or ignore if keys don't match
-                     # print("Signature mismatch!")
-                     pass
-
-        # 3. Extract Info
-        result = {
+        msg.ParseFromString(ual_binary)
+        
+        # 验证 (可选)
+        if not self.validate(msg):
+            return {"error": "Invalid signature"}
+        
+        base_info = {
             "sender": msg.header.sender_id,
             "timestamp": msg.header.timestamp,
             "semantic_hash": msg.header.semantic_hash,
-            "is_delta": msg.header.is_delta,
-            "type": "graph",
-            "natural_language": "", # To be filled
-            "raw_graph": msg.content
+            "is_delta": msg.header.is_delta
         }
-        
-        # 4. Generate Natural Language Description (Rehydration)
-        # Convert graph back to text using Atlas
-        nl_desc = []
-        for node in msg.content.nodes:
-            desc = self.to_natural_language(node, self.atlas)
-            nl_desc.append(desc)
-        
-        result["natural_language"] = " | ".join(nl_desc)
-        result["nodes"] = list(msg.content.nodes)
-        result["edges"] = list(msg.content.edges)
-        
-        return result
-
-    def to_natural_language(self, node: ual_pb2.Node, atlas) -> str:
-        """
-        Semantic Rehydration: Convert a Node back to human-readable string.
-        Action(verb=4098) -> Action(verb="fire_detected")
-        """
-        type_map = {
-            ual_pb2.Node.ENTITY: "Entity",
-            ual_pb2.Node.ACTION: "Action",
-            ual_pb2.Node.PROPERTY: "Property",
-            ual_pb2.Node.LOGIC: "Logic",
-            ual_pb2.Node.MODAL: "Modal",
-            ual_pb2.Node.VALUE: "Value",
-            ual_pb2.Node.DATA_REF: "Data",
-            ual_pb2.Node.UNKNOWN: "Unknown"
-        }
-        
-        type_str = type_map.get(node.type, "Node")
-        
-        # 1. If it has a direct value, show it
-        if node.HasField("str_val"):
-            return f"{type_str}(val='{node.str_val}')"
-        if node.HasField("num_val"):
-            return f"{type_str}(val={node.num_val})"
-        if node.HasField("bool_val"):
-            return f"{type_str}(val={node.bool_val})"
             
-        # 2. Look up Semantic ID
-        concept = "???"
-        if atlas:
-            found = atlas.get_concept(node.semantic_id)
-            if found:
-                concept = found
+        # 检查 Payload 类型
+        if msg.HasField("handshake"):
+             handshake = msg.handshake
+             # 自动加载 Namespaces (如果提供)
+             if handshake.namespaces:
+                 for ns in handshake.namespaces:
+                     self.atlas.load_namespace(ns)
+                     
+             return {
+                 **base_info,
+                 "type": "handshake",
+                 "agent_id": handshake.agent_id,
+                 "capabilities": list(handshake.capabilities),
+                 "namespaces": list(handshake.namespaces),
+                 "compute_power": handshake.compute_power,
+                 "natural_language": f"Handshake from {handshake.agent_id} (Compute: {handshake.compute_power}, NS: {handshake.namespaces})"
+             }
         
-        return f"{type_str}(verb='{concept}' id={node.semantic_id})"
-
-    def compile(self, text_command: str, atlas=None) -> ual_pb2.Graph:
-        """
-        UAL Text Compiler: Compile text command to UAL Graph.
-        Handles IF-THEN logic and parameters automatically.
-        """
-        # Ensure we have an atlas (use self.atlas if not provided)
-        target_atlas = atlas if atlas else self.atlas
-        
-        # Use existing Parser (RuleBased is sufficient for MVP logic)
-        # Note: self.parser already uses self.atlas
-        nodes, edges, metadata = self.parser.parse(text_command)
-        
-        # Construct Graph
-        graph = self.create_graph(nodes, edges, context_id="compiled_script")
-        return graph
-
-    # --- UAL Raw Bitstream (Extreme Compression) ---
-    def encode_raw_bitstream(self, action_semantic_id: int, param_value: int = 0) -> bytes:
-        """
-        Extreme Compression Mode (< 20 bytes).
-        Schema: [4 bits Op | 12 bits Verb] + [16 bits Parameter]
-        Total: 4 bytes (32 bits)
-        """
-        # Op: 0=Action (Fixed for MVP)
-        op_code = 0
-        
-        # Pack Op (4 bits) + Verb (12 bits) = 16 bits
-        header = (op_code << 12) | (action_semantic_id & 0xFFF)
-        
-        # Pack
-        import struct
-        # >H: Big-endian unsigned short (2 bytes)
-        # >h: Big-endian short (2 bytes) for param
-        return struct.pack(">Hh", header, param_value)
-
-    def decode_raw_bitstream(self, raw_bytes: bytes) -> Dict[str, Any]:
-        """
-        Decode Raw Bitstream.
-        """
-        import struct
-        if len(raw_bytes) != 4:
-            raise ValueError("Raw Bitstream must be exactly 4 bytes")
+        if msg.HasField("content"):
+            graph = msg.content
             
-        header, param = struct.unpack(">Hh", raw_bytes)
+            # Delta 还原
+            if msg.header.is_delta:
+                # 尝试从 Tracker 还原
+                graph = self.tracker.apply_delta(graph, msg.header.sender_id)
+            
+            # 解析 Graph
+            description = []
+            
+            node_map = {n.id: n for n in graph.nodes}
+            adj = {n.id: [] for n in graph.nodes}
+            for edge in graph.edges:
+                if edge.source_id in adj:
+                    adj[edge.source_id].append(edge.target_id)
+                
+            actions = [n for n in graph.nodes if 0xA0 <= n.semantic_id < 0xB0] # Improved Action Check
+            
+            nl_parts = []
+            
+            if not actions:
+                 # If no actions, list all other nodes
+                 other_nodes = [n for n in graph.nodes if not (0xA0 <= n.semantic_id < 0xB0)]
+                 parts = []
+                 for n in other_nodes:
+                     if n.type == ual_pb2.Node.VALUE and n.HasField("str_val"):
+                         parts.append(n.str_val)
+                     elif n.semantic_id:
+                         c = self.atlas.get_concept(n.semantic_id)
+                         if c: parts.append(c)
+                 if parts:
+                     nl_parts.append(" ".join(parts))
+            
+            for action in actions:
+                action_concept = self.atlas.get_concept(action.semantic_id) or "Unknown_Action"
+                
+                target_concepts = []
+                if action.id in adj:
+                    for target_id in adj[action.id]:
+                        if target_id in node_map:
+                            target_node = node_map[target_id]
+                            concept = self.atlas.get_concept(target_node.semantic_id)
+                            
+                            # 检查 Embedding
+                            extra = ""
+                            if target_node.HasField("embedding"):
+                                extra = " [Vision]"
+                                
+                            if concept:
+                                target_concepts.append(concept + extra)
+                            elif target_node.type == ual_pb2.Node.VALUE:
+                                target_concepts.append(target_node.str_val + extra)
+                
+                phrase = f"{action_concept} " + " ".join(target_concepts)
+                nl_parts.append(phrase)
+                
+            return {
+                **base_info,
+                "type": "graph",
+                "natural_language": "; ".join(nl_parts),
+                "raw_graph": str(msg.content), # Debug info
+                "nodes": graph.nodes,
+                "edges": graph.edges
+            }
         
-        op_code = (header >> 12) & 0xF
-        semantic_id = header & 0xFFF
-        
-        # Rehydrate
-        concept = self.atlas.get_concept(semantic_id) or f"Unknown_0x{semantic_id:X}"
-        
-        return {
-            "type": "raw_bitstream",
-            "op": op_code,
-            "semantic_id": semantic_id,
-            "param": param,
-            "natural_language": f"RawAction: {concept} (Param={param})"
-        }
-
-
+        return {"error": "Unknown payload type"}
 
     def validate(self, msg: ual_pb2.UALMessage) -> bool:
         """验证消息完整性和签名"""

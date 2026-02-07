@@ -58,25 +58,6 @@ def inspect_packet(input_data: str):
     except Exception as e:
         print(f"Error decoding packet: {e}")
 
-def compile_text(text: str, pure_binary: bool = False):
-    """
-    Compile natural language text to UAL binary.
-    """
-    agent = UAL(agent_id="CLI_Compiler")
-    
-    try:
-        binary = agent.encode(text, pure_binary=pure_binary)
-        hex_output = binascii.hexlify(binary).decode('utf-8')
-        
-        print(f"\n=== UAL Compiler ===")
-        print(f"Input: \"{text}\"")
-        print(f"Mode: {'PureBinary' if pure_binary else 'Standard'}")
-        print(f"Size: {len(binary)} bytes")
-        print(f"\nHex Output:\n{hex_output}")
-        
-    except Exception as e:
-        print(f"Error compiling text: {e}")
-
 def main():
     parser = argparse.ArgumentParser(description="UAL CLI Debugger")
     subparsers = parser.add_subparsers(dest="command", help="Commands")
@@ -85,17 +66,10 @@ def main():
     inspect_parser = subparsers.add_parser("inspect", help="Inspect a hex-encoded UAL packet")
     inspect_parser.add_argument("hex", help="Hex string of the packet")
     
-    # Compile Command
-    compile_parser = subparsers.add_parser("compile", help="Compile text to UAL binary")
-    compile_parser.add_argument("text", help="Natural language text to compile")
-    compile_parser.add_argument("--pure-binary", action="store_true", help="Enable PureBinary mode (strip metadata)")
-
     args = parser.parse_args()
     
     if args.command == "inspect":
         inspect_packet(args.hex)
-    elif args.command == "compile":
-        compile_text(args.text, args.pure_binary)
     else:
         parser.print_help()
 

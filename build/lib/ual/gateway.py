@@ -119,80 +119,45 @@ class UALGateway:
             logger.warning("⚠️ ROS2 (rclpy) not found. Running in MOCK mode.")
         else:
             rclpy.init()
-            self.ros_node = UALRosNode(self.agent)
-            rclpy.spin(self.ros_node)
-
-# --- Self-Healing Gateway ---
-from .ecc import ErrorCorrection
-from .core import UAL
-
-class SelfHealingGateway:
-    """
-    UAL 自愈网关 (Self-Healing Gateway)
-    
-    功能：
-    1. 接收二进制流
-    2. 校验完整性 (Checksum/ECC)
-    3. 如果损坏，尝试本地修复 (Bit-level ECC -> Semantic Repair)
-    4. 只有彻底失败才请求重传
-    """
-    
-    def __init__(self, agent: UAL):
-        self.agent = agent
-        self.context_cache = [] # ["flight", "emergency", ...]
-        self.repair_stats = {"success": 0, "failed": 0}
-
-    def update_context(self, context_tag: str):
-        """Update context cache (e.g. current mission phase)"""
-        self.context_cache.append(context_tag)
-        if len(self.context_cache) > 5:
-            self.context_cache.pop(0)
-
-    def receive_packet(self, raw_data: bytes) -> Any:
-        """
-        Main Entry Point.
-        raw_data: UAL Binary + 1 byte Parity (Simulated)
-        """
-        logger.info(f"Gateway received {len(raw_data)} bytes.")
+            
+        self.ros_node = UALRosNode(self.agent)
         
-        # 1. Bit-Level Repair (ECC)
-        clean_data = ErrorCorrection.verify_and_repair_bitstream(raw_data)
+        # Spin ROS node in a separate thread
+        if ROS_AVAILABLE:
+            self.executor_thread = threading.Thread(target=rclpy.spin, args=(self.ros_node,), daemon=True)
+            self.executor_thread.start()
+        else:
+            # Mock loop
+            threading.Thread(target=self._mock_ros_loop, daemon=True).start()
+
+    def stop(self):
+        if ROS_AVAILABLE:
+            self.ros_node.destroy_node()
+            rclpy.shutdown()
+        logger.info("🛑 Gateway Stopped")
+
+    def _mock_ros_loop(self):
+        """Simulates incoming messages for testing without ROS installed"""
+        logger.info("🔮 Starting Mock ROS Loop...")
+        time.sleep(1)
+        # Simulate an incoming message object
+        msg = type('Msg', (), {'data': 'Robot move forward speed 5'})()
+        self.ros_node.listener_callback(msg)
         
-        if clean_data is None:
-            logger.error("❌ Critical: Bitstream too corrupted for ECC.")
-            self.repair_stats["failed"] += 1
-            return None # Trigger Retransmission Request (ARQ)
-            
-        # 2. Decode & Semantic Repair
-        try:
-            decoded = None
-            
-            # Special Case: Raw Bitstream (4 bytes)
-            if len(clean_data) == 4:
-                try:
-                    decoded = self.agent.decode_raw_bitstream(clean_data)
-                    logger.info("✅ Detected & Decoded Raw Bitstream")
-                except Exception:
-                    pass # Fallback to Protobuf
-            
-            if decoded is None:
-                # Try Standard Protobuf Decode
-                decoded = self.agent.decode(clean_data)
-            
-            # Check for logical anomalies (Semantic Repair)
-            if "nodes" in decoded:
-                 repaired = ErrorCorrection.semantic_repair(
-                     decoded["nodes"], 
-                     self.agent.atlas, 
-                     self.context_cache
-                 )
-                 if repaired > 0:
-                     logger.info(f"✅ Semantic Repair: Fixed {repaired} logical errors.")
-                     self.repair_stats["success"] += 1
-            
-            return decoded
-            
-        except Exception as e:
-            logger.error(f"❌ Decode failed even after ECC: {e}")
-            self.repair_stats["failed"] += 1
-            return None
+        time.sleep(2)
+        msg.data = "Emergency stop now"
+        self.ros_node.listener_callback(msg)
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    from ual import UAL
+    
+    agent = UAL("ROS_Bot_01")
+    gateway = UALGateway(agent)
+    gateway.start()
+    
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        gateway.stop()

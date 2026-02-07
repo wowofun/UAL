@@ -51,6 +51,23 @@ UAL (通用智能体语言) 是一个突破性的开源协议，旨在打破不�
 
 ---
 
+## 🏗️ UAL 1.0 终极架构 (Ultimate Architecture)
+
+UAL 采用三层分层架构，实现了从云端可视化编排到极端受限硬件的全面覆盖。
+
+| 层级 (Layer) | 模块 (Module) | 核心能力 (Core Capability) | 功耗/带宽 (Power/BW) | 典型载体 (Device) |
+| :--- | :--- | :--- | :--- | :--- |
+| **应用层 (L3)** | **UAL-Studio** | DSL 编译器 & DAG 可视化预览 | High | Web / Desktop / Cloud |
+| **逻辑层 (L2)** | **UAL-Core** | 语义还原、自愈网关、ECC 纠错 | Medium | Edge Gateway / Linux |
+| **物理层 (L1)** | **UAL-Tiny** | 4-Byte Raw Bitstream 解析 | Ultra Low | MCU / FPGA / Sensors |
+
+### 🌟 架构亮点
+*   **全链路覆盖**: 从 React 前端可视化 DSL 编写，到 C 语言嵌入式解析，同一套语义协议贯穿始终。
+*   **极致压缩 (Raw Bitstream)**: 在 L1 层，一条完整的动作指令仅需 **4 Bytes**，适用于水声通信、深空探测等极端环境。
+*   **自愈能力 (Self-Healing)**: L2 层内置 ECC 纠错引擎，能够自动修复传输中的比特翻转错误。
+
+---
+
 ## 🚀 快速开始
 
 ### 1. 安装

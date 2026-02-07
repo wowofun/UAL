@@ -1,0 +1,5 @@
+include src/ual/atlas.yaml
+include src/ual/packages/*.yaml
+include spec/ual.proto
+include README.md
+include README_zh-CN.md

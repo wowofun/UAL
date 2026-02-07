@@ -99,25 +99,108 @@ class UALVisualizer:
                 edge_styles.append('solid')
                 edge_colors.append('black')
 
-        # 3. 绘图
-        plt.figure(figsize=(10, 8))
-        pos = nx.spring_layout(G, k=1.5) # 弹簧布局
+        # 3. 绘制
+        pos = nx.spring_layout(G)
+        plt.figure(figsize=(10, 6))
         
-        # 绘制节点
-        nx.draw_networkx_nodes(G, pos, node_color=colors, node_size=2000, alpha=0.9, edgecolors='gray')
-        nx.draw_networkx_labels(G, pos, labels=labels, font_size=10, font_weight='bold')
+        nx.draw_networkx_nodes(G, pos, node_color=colors, node_size=1500, alpha=0.8)
+        nx.draw_networkx_labels(G, pos, labels, font_size=10)
         
-        # 绘制边
-        nx.draw_networkx_edges(G, pos, edge_color=edge_colors, style=edge_styles, arrowsize=20, width=2)
-        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=8)
+        nx.draw_networkx_edges(G, pos, style=edge_styles, edge_color=edge_colors, 
+                             arrows=True, arrowsize=20, width=1.5)
+        
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_color='red')
         
         plt.title(title)
         plt.axis('off')
+        plt.savefig(output_file)
+        logger.info(f"Graph saved to {output_file}")
+        plt.close()
+
+    def generate_preview_html(self, graph_data: Graph, output_file: str = "UAL_Preview.html"):
+        """
+        生成交互式 HTML 预览 (基于 Mermaid.js)
+        """
+        mermaid_lines = ["graph TD"]
         
-        try:
-            plt.savefig(output_file, dpi=300, bbox_inches='tight')
-            logger.info(f"Graph visualization saved to {output_file}")
-        except Exception as e:
-            logger.error(f"Failed to save visualization: {e}")
-        finally:
-            plt.close()
+        # 1. Styles
+        # IF/Logic: Orange (Diamond)
+        # Action: Green (Rect)
+        # Entity: Blue (Circle/Rect)
+        
+        # 2. Nodes
+        for node in graph_data.nodes:
+            label = self._get_node_label(node).replace('"', "'")
+            shape_start = "["
+            shape_end = "]"
+            
+            if node.type == Node.LOGIC:
+                shape_start = "{"
+                shape_end = "}"
+                style_class = "logic"
+            elif node.type == Node.ACTION:
+                shape_start = "("
+                shape_end = ")"
+                style_class = "action"
+            elif node.type == Node.ENTITY:
+                shape_start = "(["
+                shape_end = "])"
+                style_class = "entity"
+            else:
+                style_class = "default"
+                
+            mermaid_lines.append(f'    {node.id}{shape_start}"{label}"{shape_end}:::class_{style_class}')
+
+        # 3. Edges
+        relation_map = {
+            Edge.DEPENDS_ON: "-->|deps|",
+            Edge.NEXT: "-->|next|",
+            Edge.ATTRIBUTE: "---|attr|",
+            Edge.ARGUMENT: "-->|arg|",
+            Edge.CONDITION: "-->|if|",
+            Edge.CONSEQUENCE: "-->|then|", # Assuming we add this or map it
+            4: "-->|cond|", # Map raw ID if enum not fully updated
+            5: "-->|then|"
+        }
+        
+        for edge in graph_data.edges:
+            arrow = relation_map.get(edge.relation, "-->")
+            mermaid_lines.append(f"    {edge.source_id} {arrow} {edge.target_id}")
+            
+        mermaid_content = "\n".join(mermaid_lines)
+        
+        html_template = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <title>UAL Logic Preview</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {{ font-family: sans-serif; padding: 20px; background: #f0f0f0; }}
+        .container {{ background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+        h1 {{ color: #333; }}
+        .mermaid {{ margin-top: 20px; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>UAL Visual Debugger</h1>
+        <p>Generated Logic Topology</p>
+        <div class="mermaid">
+{mermaid_content}
+        </div>
+    </div>
+    <script>
+        mermaid.initialize({{
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {{ curve: 'basis' }}
+        }});
+    </script>
+</body>
+</html>
+"""
+        with open(output_file, 'w') as f:
+            f.write(html_template)
+        
+        logger.info(f"HTML Preview generated at: {output_file}")

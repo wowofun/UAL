@@ -68,3 +68,84 @@ Ual__Graph* ual_unpack(const uint8_t* data, size_t len) {
 void ual_free_unpacked(Ual__Graph* graph) {
     ual__graph__free_unpacked(graph, NULL);
 }
+
+Ual__Node* ual_find_node_by_semantic_id(Ual__Graph* graph, uint32_t semantic_id) {
+    if (!graph || !graph->nodes) return NULL;
+    for (size_t i = 0; i < graph->n_nodes; i++) {
+        if (graph->nodes[i]->semantic_id == semantic_id) {
+            return graph->nodes[i];
+        }
+    }
+    return NULL;
+}
+
+Ual__Node* ual_find_node_by_id(Ual__Graph* graph, const char* id) {
+    if (!graph || !graph->nodes || !id) return NULL;
+    for (size_t i = 0; i < graph->n_nodes; i++) {
+        if (graph->nodes[i]->id && strcmp(graph->nodes[i]->id, id) == 0) {
+            return graph->nodes[i];
+        }
+    }
+    return NULL;
+}
+
+Ual__Node* ual_find_target_node(Ual__Graph* graph, const char* src_id, Ual__RelationType rel) {
+    if (!graph || !graph->edges || !src_id) return NULL;
+    for (size_t i = 0; i < graph->n_edges; i++) {
+        if (strcmp(graph->edges[i]->source_id, src_id) == 0 && graph->edges[i]->relation == rel) {
+             return ual_find_node_by_id(graph, graph->edges[i]->target_id);
+        }
+    }
+    return NULL;
+}
+
+int ual_get_node_int(Ual__Node* node, int default_val) {
+    if (!node) return default_val;
+    if (node->value_case == UAL__NODE__VALUE_NUM_VAL) {
+        return (int)node->num_val;
+    }
+    return default_val;
+}
+
+float ual_get_node_float(Ual__Node* node, float default_val) {
+    if (!node) return default_val;
+    if (node->value_case == UAL__NODE__VALUE_NUM_VAL) {
+        return (float)node->num_val;
+    }
+    return default_val;
+}
+
+const char* ual_get_node_str(Ual__Node* node, const char* default_val) {
+    if (!node) return default_val;
+    if (node->value_case == UAL__NODE__VALUE_STR_VAL) {
+        return node->str_val;
+    }
+    return default_val;
+}
+
+int ual_get_action_param_int(Ual__Graph* graph, const char* action_id, uint32_t param_semantic_id, int default_val) {
+    if (!graph || !action_id) return default_val;
+    
+    // Find edges from action
+    for (size_t i = 0; i < graph->n_edges; i++) {
+        if (strcmp(graph->edges[i]->source_id, action_id) == 0) {
+             Ual__Node* target = ual_find_node_by_id(graph, graph->edges[i]->target_id);
+             if (!target) continue;
+
+             // Case 1: Target IS the parameter (matches semantic ID) and has value
+             if (target->semantic_id == param_semantic_id) {
+                 // Check if value is on this node
+                 if (target->value_case == UAL__NODE__VALUE_NUM_VAL) {
+                     return (int)target->num_val;
+                 }
+                 
+                 // Case 2: Target is Unit/Key, Value is attached via Attribute
+                 Ual__Node* value_node = ual_find_target_node(graph, target->id, UAL__RELATION_TYPE__ATTRIBUTE);
+                 if (value_node) {
+                     return ual_get_node_int(value_node, default_val);
+                 }
+             }
+        }
+    }
+    return default_val;
+}

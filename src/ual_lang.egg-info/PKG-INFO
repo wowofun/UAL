@@ -1,3 +1,43 @@
+Metadata-Version: 2.4
+Name: ual-lang
+Version: 0.1.0
+Summary: Universal Action Language (UAL) - A binary-first, semantic protocol for AI agents
+Home-page: https://github.com/wowofun/UAL
+Author: UAL Contributors
+Author-email: open@ual-lang.org
+Project-URL: Bug Tracker, https://github.com/wowofun/UAL/issues
+Project-URL: Documentation, https://github.com/wowofun/UAL/tree/main/docs
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: Topic :: System :: Hardware
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: protobuf>=4.25.0
+Requires-Dist: networkx>=3.0
+Requires-Dist: numpy>=1.24.0
+Requires-Dist: grpcio-tools>=1.60.0
+Requires-Dist: matplotlib>=3.7.0
+Requires-Dist: flask>=3.0.0
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: project-url
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
 # 🌐 UAL: The Universal Agent Language
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -30,23 +70,6 @@ With **UAL v0.2**, we have introduced a **Dual-Engine Parser** (Rule-Based + LLM
 | **🔌 Universal Gateway** | Native adapters for ROS2 & MQTT (IoT ready). |
 | **🌉 LLM Bridge** | **New!** First-class support for LangChain & LlamaIndex ("Tool" integration). |
 | **🎨 Dynamic Dialect** | Namespace support for vertical domains (Medical, Industrial). |
-
----
-
-## 🏗️ UAL 1.0 Architecture
-
-UAL adopts a three-tier architecture, covering everything from cloud-based visual orchestration to ultra-constrained hardware.
-
-| Layer | Module | Core Capability | Power/BW | Typical Device |
-| :--- | :--- | :--- | :--- | :--- |
-| **L3 Application** | **UAL-Studio** | DSL Compiler & DAG Visualization | High | Web / Desktop / Cloud |
-| **L2 Logic** | **UAL-Core** | Semantic Rehydration, Self-Healing Gateway, ECC | Medium | Edge Gateway / Linux |
-| **L1 Physical** | **UAL-Tiny** | 4-Byte Raw Bitstream Parsing | Ultra Low | MCU / FPGA / Sensors |
-
-### 🌟 Architecture Highlights
-*   **Full Stack Coverage**: From React-based visual DSL editing to C-based embedded parsing, one semantic protocol rules them all.
-*   **Extreme Compression**: At L1, a complete action command requires only **4 Bytes**, ideal for underwater or deep-space communication.
-*   **Self-Healing**: L2 includes an ECC engine that automatically repairs bit-flip errors during transmission.
 
 ---
 

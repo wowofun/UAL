@@ -1,0 +1,9 @@
+meta:
+  name: finance_v1
+  author: Your Name
+  created: '2026-02-07'
+  version: 0.1.0
+concepts:
+  '0x6000':
+  - example_concept
+  - alias1
