@@ -1,0 +1,19 @@
+[package]
+name = "ual"
+version = "0.1.0"
+edition = "2021"
+description = "Universal Agent Language (UAL) - Embedded Rust Implementation"
+authors = ["UAL Community"]
+license = "MIT"
+
+[dependencies]
+# core dependencies for embedded use (no_std compatible)
+heapless = "0.7" # Fixed capacity data structures
+serde = { version = "1.0", default-features = false, features = ["derive"] }
+postcard = "1.0" # Postcard is a #![no_std] focused serializer (simulating UAL binary format)
+
+[profile.release]
+lto = true
+opt-level = "z"
+panic = "abort"
+codegen-units = 1

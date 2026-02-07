@@ -6,17 +6,28 @@ from . import ual_pb2
 from .atlas import get_atlas
 from .utils import generate_message_id, compute_semantic_hash, sign_message, verify_signature
 from .state import StateTracker
+from .parser import SemanticParser, RuleBasedParser, LLMParser
+from .consensus import ConsensusNode
 
 class UAL:
     """
-    UAL 核心 API
+    UAL Core API
     """
     
-    def __init__(self, agent_id: str, private_key: str = "default_key"):
+    def __init__(self, agent_id: str, private_key: str = "default_key", llm_model_path: str = None):
         self.agent_id = agent_id
         self.private_key = private_key
         self.atlas = get_atlas()
         self.tracker = StateTracker()
+        
+        # Initialize Semantic Parser (LLM or Rule-Based)
+        if llm_model_path:
+            self.parser = LLMParser(llm_model_path)
+        else:
+            self.parser = RuleBasedParser()
+            
+        # Initialize Consensus Node
+        self.consensus_node = ConsensusNode(agent_id, self.atlas)
 
     def create_node(self, node_type, semantic_id: int = 0, id: str = None, value: Any = None) -> ual_pb2.Node:
         """
@@ -61,6 +72,93 @@ class UAL:
         graph.context_id = context_id
         return graph
 
+    def create_env_frame(self, frame_id: str = "world", origin: List[float] = None, orientation: List[float] = None, unit: str = "meter", timestamp: float = None) -> Dict[str, Any]:
+        """
+        Create an Environmental Frame dictionary for metadata.
+        """
+        return {
+            "frame_id": frame_id,
+            "origin": origin if origin else [0.0, 0.0, 0.0],
+            "orientation": orientation if orientation else [0.0, 0.0, 0.0, 1.0],
+            "unit": unit,
+            "timestamp": timestamp if timestamp else time.time()
+        }
+
+    def parse(self, natural_language: str):
+        """
+        Explicit parse method returning nodes, edges, metadata.
+        """
+        return self.parser.parse(natural_language)
+
+    def encode_from_graph(self, 
+                          nodes: List[ual_pb2.Node], 
+                          edges: List[ual_pb2.Edge], 
+                          metadata: Dict[str, Any],
+                          receiver_id: str = "broadcast",
+                          context_id: str = "",
+                          use_delta: bool = False) -> bytes:
+        """
+        Encode from pre-parsed graph structure.
+        """
+        # 2. Construct Graph
+        graph = self.create_graph(nodes, edges, context_id)
+        
+        # 3. State Tracking & Delta Compression
+        full_graph = graph
+        final_graph = full_graph
+        is_delta_msg = False
+        parent_hash = ""
+        
+        if use_delta and receiver_id != "broadcast":
+            # Check if we can send a delta
+            # Logic: Compute full hash, compare with peer's known state
+            delta_graph = self.tracker.compute_delta(full_graph, receiver_id)
+            if delta_graph != full_graph: # Simplified check
+                final_graph = delta_graph
+                is_delta_msg = True
+                parent_hash = self.tracker.last_hashes.get(receiver_id, "")
+        
+        # 4. Construct Message
+        msg = ual_pb2.UALMessage()
+        
+        # Header
+        msg.header.sender_id = self.agent_id
+        msg.header.receiver_id = receiver_id
+        msg.header.timestamp = int(time.time())
+        msg.header.message_id = generate_message_id(self.agent_id)
+        msg.header.protocol_version = "0.2.0"
+        msg.header.is_delta = is_delta_msg
+        msg.header.parent_hash = parent_hash
+        
+        # Apply Metadata from Parser (Urgency, Style, EnvFrame)
+        msg.header.urgency = metadata.get("urgency", 0.0)
+        msg.header.style = int(metadata.get("style", 0))
+        
+        if "env_frame" in metadata:
+            ef_data = metadata["env_frame"]
+            ef = msg.header.env_frame
+            ef.frame_id = str(ef_data.get("frame_id", "world"))
+            if "origin" in ef_data:
+                ef.origin.extend(ef_data["origin"])
+            if "orientation" in ef_data:
+                ef.orientation.extend(ef_data["orientation"])
+            ef.unit = str(ef_data.get("unit", "meter"))
+            ef.timestamp = float(ef_data.get("timestamp", time.time()))
+        
+        # Content
+        msg.content.CopyFrom(final_graph)
+        
+        # Semantic Hash
+        msg.header.semantic_hash = compute_semantic_hash(msg.content.SerializeToString(deterministic=True))
+        
+        # Signature
+        payload_bytes = msg.content.SerializeToString(deterministic=True)
+        sign_payload = msg.header.SerializeToString(deterministic=True) + payload_bytes
+        msg.signature.sign_data = sign_message(sign_payload, self.private_key)
+        msg.signature.algorithm = "sha256_hmac_mock"
+        
+        return msg.SerializeToString()
+
     def encode(self, 
                natural_language: str, 
                receiver_id: str = "broadcast",
@@ -77,114 +175,23 @@ class UAL:
             embedding_map: 词汇到向量的映射 {"obstacle": [0.1, 0.2...]}
             use_delta: 是否启用增量压缩
         """
-        # 1. 解析自然语言 (Simple Parser)
-        words = natural_language.lower().replace('.', '').split()
+        # 1. Parse Natural Language -> Semantic Graph
+        nodes, edges, metadata = self.parser.parse(natural_language)
         
-        nodes = []
-        edges = []
-        
-        # 简单的构建逻辑：找到动词作为根，名词作为依赖
-        action_node = None
-        entity_nodes = []
-        
-        for word in words:
-            semantic_id = self.atlas.get_id(word)
-            if semantic_id:
-                node = ual_pb2.Node()
-                node.id = str(uuid.uuid4())[:8]
-                node.semantic_id = semantic_id
-                
-                # 检查是否有 Embedding 注入
-                if embedding_map and word in embedding_map:
+        # Inject Embeddings if provided
+        # (Naive injection: if a node's concept matches a key in embedding_map, inject)
+        if embedding_map:
+            # Re-map semantic IDs to concepts to check against embedding_map
+            # This is inefficient but functional for MVP
+            for node in nodes:
+                concept = self.atlas.get_concept(node.semantic_id)
+                if concept and concept in embedding_map:
                     vec = ual_pb2.Vector()
-                    vec.values.extend(embedding_map[word])
-                    vec.model_name = "clip-mock" 
+                    vec.values.extend(embedding_map[concept])
+                    vec.model_name = "clip-mock"
                     node.embedding.CopyFrom(vec)
-                
-                if 0xA0 <= semantic_id < 0xB0: # Action
-                    node.type = ual_pb2.Node.ACTION
-                    action_node = node
-                elif 0xB0 <= semantic_id < 0xC0: # Property
-                    node.type = ual_pb2.Node.PROPERTY
-                    entity_nodes.append(node)
-                elif 0xC0 <= semantic_id < 0xD0: # Logic
-                     node.type = ual_pb2.Node.LOGIC
-                     entity_nodes.append(node)
-                elif 0xD0 <= semantic_id < 0xE0: # Modal
-                     node.type = ual_pb2.Node.MODAL
-                     entity_nodes.append(node)
-                elif 0xE0 <= semantic_id < 0xF0: # Entity
-                    node.type = ual_pb2.Node.ENTITY
-                    entity_nodes.append(node)
-                elif semantic_id >= 0x1000: # 动态/行业扩展 ID
-                    node.type = ual_pb2.Node.ENTITY 
-                    entity_nodes.append(node)
-                else:
-                    node.type = ual_pb2.Node.UNKNOWN
-                
-                nodes.append(node)
-
-        # 构建边
-        if action_node:
-            for entity in entity_nodes:
-                edge = ual_pb2.Edge()
-                edge.source_id = action_node.id
-                edge.target_id = entity.id
-                edge.relation = ual_pb2.Edge.ARGUMENT
-                edges.append(edge)
         
-        # 如果没有识别出结构，创建一个 RAW 文本节点
-        if not nodes:
-             node = ual_pb2.Node()
-             node.id = str(uuid.uuid4())[:8]
-             node.type = ual_pb2.Node.VALUE
-             node.str_val = natural_language
-             nodes.append(node)
-
-        # 2. 构建 Graph
-        full_graph = ual_pb2.Graph()
-        full_graph.nodes.extend(nodes)
-        full_graph.edges.extend(edges)
-        full_graph.context_id = context_id
-        
-        # Delta Compression 处理
-        final_graph = full_graph
-        is_delta_msg = False
-        parent_hash = ""
-        
-        if use_delta and receiver_id != "broadcast":
-            # 计算 Delta
-            delta_graph = self.tracker.compute_delta(full_graph, receiver_id)
-            final_graph = delta_graph
-            is_delta_msg = True
-            parent_hash = self.tracker.last_hashes.get(receiver_id, "")
-        
-        # 3. 构建 Message
-        msg = ual_pb2.UALMessage()
-        
-        # Header
-        msg.header.sender_id = self.agent_id
-        msg.header.receiver_id = receiver_id
-        msg.header.timestamp = int(time.time())
-        msg.header.message_id = generate_message_id(self.agent_id)
-        msg.header.protocol_version = "0.2.0"
-        msg.header.is_delta = is_delta_msg
-        msg.header.parent_hash = parent_hash
-        
-        # Content
-        msg.content.CopyFrom(final_graph)
-        
-        # Semantic Hash (基于 Full Graph 计算)
-        # 实际上我们应该 Hash full_graph, 但这里我们 Hash 发送的内容
-        msg.header.semantic_hash = compute_semantic_hash(msg.content.SerializeToString(deterministic=True))
-        
-        # Signature
-        payload_bytes = msg.content.SerializeToString(deterministic=True)
-        sign_payload = msg.header.SerializeToString(deterministic=True) + payload_bytes
-        msg.signature.sign_data = sign_message(sign_payload, self.private_key)
-        msg.signature.algorithm = "sha256_hmac_mock"
-        
-        return msg.SerializeToString()
+        return self.encode_from_graph(nodes, edges, metadata, receiver_id, context_id, use_delta)
 
     def decode(self, ual_binary: bytes) -> Dict[str, Any]:
         """
@@ -239,13 +246,13 @@ class UAL:
                 if edge.source_id in adj:
                     adj[edge.source_id].append(edge.target_id)
                 
-            actions = [n for n in graph.nodes if n.type == ual_pb2.Node.ACTION]
+            actions = [n for n in graph.nodes if 0xA0 <= n.semantic_id < 0xB0] # Improved Action Check
             
             nl_parts = []
             
             if not actions:
                  # If no actions, list all other nodes
-                 other_nodes = [n for n in graph.nodes if n.type != ual_pb2.Node.ACTION]
+                 other_nodes = [n for n in graph.nodes if not (0xA0 <= n.semantic_id < 0xB0)]
                  parts = []
                  for n in other_nodes:
                      if n.type == ual_pb2.Node.VALUE and n.HasField("str_val"):

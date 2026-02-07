@@ -41,7 +41,8 @@ def generate_api_docs(output_file="API_REFERENCE.md"):
         elif 0x0C0 <= sid < 0x0D0: category = "Logic"
         elif 0x0D0 <= sid < 0x0E0: category = "Modal"
         elif 0x0E0 <= sid < 0x0F0: category = "Entity"
-        elif 0x0F0 <= sid < 0x100: category = "Meta-Cognition"
+        elif 0x0F0 <= sid < 0x0FA: category = "Entity (Extended)"
+        elif 0x0FA <= sid < 0x100: category = "Meta-Cognition"
         
         content.append(f"| `0x{sid:03X}` | **{concept}** | {category} |")
         

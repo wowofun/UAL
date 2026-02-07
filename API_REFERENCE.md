@@ -11,15 +11,30 @@ Core semantic concepts mapped to standard Hex IDs.
 | `0x0A3` | **grab** | Action |
 | `0x0A4` | **release** | Action |
 | `0x0A5` | **hover** | Action |
+| `0x0A6` | **open** | Action |
+| `0x0A7` | **close** | Action |
+| `0x0A8` | **turn_on** | Action |
+| `0x0A9` | **turn_off** | Action |
+| `0x0AA` | **clean** | Action |
+| `0x0AB` | **mop** | Action |
+| `0x0AC` | **vacuum** | Action |
+| `0x0AD` | **cook** | Action |
+| `0x0AE` | **slice** | Action |
+| `0x0AF` | **boil** | Action |
 | `0x0B1` | **speed** | Property |
 | `0x0B2` | **position** | Property |
 | `0x0B3` | **status** | Property |
 | `0x0B4` | **battery** | Property |
+| `0x0B5` | **temperature** | Property |
+| `0x0B6` | **color** | Property |
+| `0x0B7` | **size** | Property |
+| `0x0B8` | **weight** | Property |
 | `0x0C1` | **if** | Logic |
 | `0x0C2` | **then** | Logic |
 | `0x0C3` | **else** | Logic |
 | `0x0C4` | **and** | Logic |
 | `0x0C5` | **or** | Logic |
+| `0x0C6` | **not** | Logic |
 | `0x0D1` | **must** | Modal |
 | `0x0D2` | **should** | Modal |
 | `0x0D3` | **can** | Modal |
@@ -28,18 +43,37 @@ Core semantic concepts mapped to standard Hex IDs.
 | `0x0E3` | **obstacle** | Entity |
 | `0x0E4` | **base** | Entity |
 | `0x0E5` | **package** | Entity |
-| `0x0F1` | **uncertainty** | Meta-Cognition |
-| `0x0F2` | **probability** | Meta-Cognition |
-| `0x0F3` | **confidence** | Meta-Cognition |
-| `0x0F4` | **belief** | Meta-Cognition |
+| `0x0E6` | **kitchen** | Entity |
+| `0x0E7` | **shelf** | Entity |
+| `0x0E8` | **living_room** | Entity |
+| `0x0E9` | **bedroom** | Entity |
+| `0x0EA` | **bathroom** | Entity |
+| `0x0EB` | **door** | Entity |
+| `0x0EC` | **window** | Entity |
+| `0x0ED` | **light** | Entity |
+| `0x0EE` | **table** | Entity |
+| `0x0EF` | **chair** | Entity |
+| `0x0F0` | **floor** | Entity (Extended) |
+| `0x0F1` | **fridge** | Entity (Extended) |
+| `0x0F2` | **tv** | Entity (Extended) |
+| `0x0F3` | **cup** | Entity (Extended) |
+| `0x0F4` | **plate** | Entity (Extended) |
+| `0x0F5` | **knife** | Entity (Extended) |
+| `0x0F6` | **bed** | Entity (Extended) |
+| `0x0F7` | **person** | Entity (Extended) |
+| `0x0F8` | **water** | Entity (Extended) |
+| `0x0F9` | **food** | Entity (Extended) |
+| `0x0FA` | **uncertainty** | Meta-Cognition |
+| `0x0FB` | **probability** | Meta-Cognition |
+| `0x0FC` | **confidence** | Meta-Cognition |
+| `0x0FD` | **belief** | Meta-Cognition |
 
 ## 2. Industry Namespaces
 ### Namespace: `warehouse_v1`
 | Hex ID | Concept |
 |--------|---------|
-| `0x1001` | shelf |
-| `0x1002` | pallet |
-| `0x1003` | forklift |
+| `0x1001` | pallet |
+| `0x1002` | forklift |
 
 ### Namespace: `medical_v1`
 | Hex ID | Concept |
