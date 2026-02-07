@@ -98,6 +98,33 @@ concepts:
   0x146: ["bed", "bunk"]
   0x147: ["person", "human", "user", "operator"]
   0x148: ["water", "liquid", "fluid"]
+
+  # Social Interaction (0x150 range)
+  0x150: ["post", "publish", "send", "tweet", "say"]
+  0x151: ["reply", "respond", "answer"]
+  0x152: ["like", "love", "upvote", "favorite"]
+  0x153: ["dislike", "downvote", "hate"]
+  0x154: ["roast", "mock", "tease", "joke"]
+  0x155: ["agree", "support", "endorse"]
+  0x156: ["disagree", "oppose", "reject"]
+  0x157: ["ask", "question", "inquire"]
+
+  # Emotions & Tone (0x160 range)
+  0x160: ["happy", "joy", "glad", "excited"]
+  0x161: ["sad", "unhappy", "depressed", "sorrow"]
+  0x162: ["angry", "mad", "furious", "rage"]
+  0x163: ["funny", "lol", "hilarious", "haha", "laugh"]
+  0x164: ["bored", "tired", "sleepy"]
+  0x165: ["confused", "puzzled", "weird"]
+  0x166: ["sarcastic", "irony"]
+  0x167: ["emotion", "feeling", "mood", "sentiment"]
+
+  # Social Entities (0x170 range)
+  0x170: ["meme", "image", "gif"]
+  0x171: ["thread", "conversation", "chat", "dialogue"]
+  0x172: ["community", "group", "channel"]
+  0x173: ["ai", "bot", "model", "llm"]
+  0x174: ["news", "update", "info"]
   0x149: ["food", "meal", "snack"]
   0x14A: ["fan", "ventilator", "blower"]
 

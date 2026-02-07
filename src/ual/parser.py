@@ -160,7 +160,11 @@ class RuleBasedParser(SemanticParser):
                 
                 # Check Type (Heuristic based on ID range)
                 # 0xA0+ = Action, 0xE0+ = Entity, 0xB0+ = Property
-                is_action = (semantic_id >= 0xA0 and semantic_id < 0xB0)
+                # 0x150+ = Social Action
+                is_physical_action = (semantic_id >= 0xA0 and semantic_id < 0xB0)
+                is_social_action = (semantic_id >= 0x150 and semantic_id < 0x160)
+                is_action = is_physical_action or is_social_action
+                
                 node.type = 2 if is_action else 1 # 2=ACTION, 1=ENTITY
                 
                 if is_negated:
