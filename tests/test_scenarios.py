@@ -97,3 +97,29 @@ def test_complex_logic_chain(ual_agent):
     # Should have Logic nodes
     logic_nodes = [n for n in decoded['nodes'] if n.type == 4]
     assert len(logic_nodes) > 0
+
+def test_scenario_social_interaction(ual_agent):
+    """Scenario 5: Social Robot Interaction (ZeroAIBot)."""
+    # Using the new social protocol concepts
+    command = "Roast humans for being slow"
+    encoded = ual_agent.encode(command)
+    decoded = ual_agent.decode(encoded)
+    
+    save_graph_image(decoded.get('nodes', []), decoded.get('edges', []), "scenario_social_chat.png")
+    
+    # Check if 'Roast' (Action 0x154) is present
+    # Note: 'Roast' is in 0x150 range.
+    
+    # Check if 'Roast' action is detected
+    # We check if any node corresponds to the social action range or has the text
+    has_social_action = False
+    for n in decoded['nodes']:
+        # Check by ID range (0x150-0x15F for actions) or by text if ID is not resolved yet in test env
+        if n.semantic_id >= 0x150 and n.semantic_id < 0x160:
+            has_social_action = True
+            break
+        if "roast" in n.str_val.lower():
+             has_social_action = True
+             break
+             
+    assert has_social_action, "Should detect social action 'Roast'"

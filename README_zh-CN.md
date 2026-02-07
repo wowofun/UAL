@@ -167,9 +167,9 @@ python3 -m pytest
 ### 2. 可视化报告 (Visualization)
 测试过程中会自动生成 DAG (有向无环图) 可视化报告，直观展示语义解析结果。
 
-| 智能家居场景 (Smart Home) | 工业协作场景 (Industrial) |
-| :---: | :---: |
-| ![Smart Home](test_reports/images/scenario_smart_home.png) | ![Industrial](test_reports/images/scenario_industrial.png) |
+| 智能家居场景 (Smart Home) | 工业协作场景 (Industrial) | 机器人社交场景 (Social Chat) |
+| :---: | :---: | :---: |
+| ![Smart Home](test_reports/images/scenario_smart_home.png) | ![Industrial](test_reports/images/scenario_industrial.png) | ![Social Chat](test_reports/images/scenario_social_chat.png) |
 
 ### 3. 异常处理 (Robustness)
 包含针对 "Invalid Input" 和 "Unknown Concept" 的负面测试，确保系统在面对未知指令时能优雅降级或报错，而不是崩溃。
