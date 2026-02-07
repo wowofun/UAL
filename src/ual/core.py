@@ -154,7 +154,7 @@ class UAL:
         # Signature
         payload_bytes = msg.content.SerializeToString(deterministic=True)
         sign_payload = msg.header.SerializeToString(deterministic=True) + payload_bytes
-        msg.signature.sign_data = sign_message(sign_payload, self.private_key)
+        msg.signature.signature = sign_message(sign_payload, self.private_key)
         msg.signature.algorithm = "sha256_hmac_mock"
         
         return msg.SerializeToString()
@@ -291,6 +291,8 @@ class UAL:
                 "type": "graph",
                 "natural_language": "; ".join(nl_parts),
                 "raw_graph": str(msg.content), # Debug info
+                "nodes": graph.nodes,
+                "edges": graph.edges
             }
         
         return {"error": "Unknown payload type"}
@@ -307,7 +309,7 @@ class UAL:
         payload = msg.header.SerializeToString(deterministic=True) + payload_bytes
         
         # 这里假设我们知道发送者的公钥，MVP 中简单使用 dummy_key
-        is_valid = verify_signature(payload, msg.signature.sign_data, "dummy_key")
+        is_valid = verify_signature(payload, msg.signature.signature, "dummy_key")
         return True # MVP: Bypass strict check
 
     def create_handshake(self, 
@@ -341,7 +343,7 @@ class UAL:
         # Signature
         payload_bytes = handshake.SerializeToString(deterministic=True)
         sign_payload = msg.header.SerializeToString(deterministic=True) + payload_bytes
-        msg.signature.sign_data = sign_message(sign_payload, self.private_key)
+        msg.signature.signature = sign_message(sign_payload, self.private_key)
         msg.signature.algorithm = "sha256_hmac_mock"
         
         return msg.SerializeToString()

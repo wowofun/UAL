@@ -94,7 +94,11 @@ msg = receiver.decode(binary)
 print(f"📩 Received: {msg['natural_language']}")
 ```
 
-### 4. 接入大模型 (LangChain/LlamaIndex)
+### 4. 纯软件智能体与大模型 (Software Agents & LLMs)
+
+UAL 不仅仅是为了机器人设计的，它同样是 **Multi-Agent Systems (MAS)** 的理想通信协议。无论是 LangChain 智能体、AutoGPT 还是 MetaGPT，都可以使用 UAL 进行高效、结构化的逻辑交换。
+
+#### 🔹 接入大模型 (LangChain/LlamaIndex)
 
 让你的 LLM 智能体原生支持 UAL 协议。
 
@@ -105,6 +109,16 @@ bridge = UALBridge("GPT-4_Agent")
 response = bridge.speak("Drone return to base immediately", protocol='UAL')
 
 print(f"Hex Output: {response['ual_binary_hex']}")
+```
+
+#### 🔹 纯软件智能体通信演示 (Virtual Agents)
+
+查看两个纯软件智能体（无硬件）如何通过 UAL 交换逻辑条件（If-Then）：
+
+```bash
+python3 examples/virtual_agent_demo.py
+# 演示 User Agent 发送 "If temperature is high then turn on fan"
+# Service Agent 接收并解析出逻辑结构，而非简单的文本匹配。
 ```
 
 ---
@@ -135,6 +149,30 @@ python3 tools/evolution_lab.py
 python3 examples/dashboard.py
 # 访问 http://localhost:5000
 ```
+
+---
+
+## 🧪 测试与验证 (Tests & Validation)
+
+UAL 包含一套完整的自动化测试套件，涵盖核心编解码、逻辑解析、跨域场景以及异常处理。
+
+### 1. 运行测试
+使用 `pytest` 运行所有测试用例：
+
+```bash
+python3 -m pytest
+# 预期输出: 11 passed in 0.xxs
+```
+
+### 2. 可视化报告 (Visualization)
+测试过程中会自动生成 DAG (有向无环图) 可视化报告，直观展示语义解析结果。
+
+| 智能家居场景 (Smart Home) | 工业协作场景 (Industrial) |
+| :---: | :---: |
+| ![Smart Home](test_reports/images/scenario_smart_home.png) | ![Industrial](test_reports/images/scenario_industrial.png) |
+
+### 3. 异常处理 (Robustness)
+包含针对 "Invalid Input" 和 "Unknown Concept" 的负面测试，确保系统在面对未知指令时能优雅降级或报错，而不是崩溃。
 
 ---
 
