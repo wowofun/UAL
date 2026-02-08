@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="ual-lang",
-    version="1.0.0",
+    version="1.0.1",
     author="UAL Contributors",
     author_email="open@ual-lang.org",
     description="Universal Action Language (UAL) - A binary-first, semantic protocol for AI agents",
@@ -39,10 +39,12 @@ setup(
         "protobuf>=4.25.0",
         "networkx>=3.0",
         "numpy>=1.24.0",
-        "grpcio-tools>=1.60.0",
-        "matplotlib>=3.7.0",
-        "flask>=3.0.0",
     ],
+    extras_require={
+        "viz": ["matplotlib>=3.7.0"],
+        "dev": ["pytest", "twine", "build"],
+        "studio": ["flask>=3.0.0", "deep-translator>=1.11.4"],
+    },
     entry_points={
         "console_scripts": [
             "ual=ual.cli:main",

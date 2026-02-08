@@ -73,25 +73,27 @@ UAL 采用三层分层架构，实现了从云端可视化编排到极端受限�
 ### 1. 安装
 
 ```bash
-# 克隆仓库
-git clone https://github.com/wowofun/UAL.git
-cd UAL
-
-# 安装依赖
-pip install -r requirements.txt
+pip install ual-lang
 ```
 
-> 💡 **硬件接入**: 如果您需要在 Arduino/ESP32 上运行，请查看 [硬件接入与集成指南](docs/HARDWARE_INTEGRATION_zh-CN.md)。
+### 2. 验证与体验 (一键集成)
 
-### 2. "The Great Demo" 全场景演示
-
-为了证明 UAL 的通用性，我们准备了一个脚本，同时模拟三个截然不同的场景：**智能家居**、**工业工厂**和**抽象辩论**。
+使用 UAL CLI 命令行工具，几秒钟内完成环境检查与演示：
 
 ```bash
-python3 examples/the_great_demo.py
+# 🏥 环境体检：检查依赖与核心功能
+ual doctor
+
+# 🎬 运行演示：体验语义编码/解码全流程
+ual demo
+
+# 🚀 快速集成：生成 boilerplate 代码，立即开始开发
+ual init
 ```
 
 ### 3. "Hello World" 代码示例
+
+运行 `ual init` 后，您将获得一个 `my_agent.py` 文件，内容如下：
 
 ```python
 from ual import UAL

@@ -55,23 +55,27 @@ UAL adopts a three-tier architecture, covering everything from cloud-based visua
 ### 1. Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/wowofun/UAL.git
-cd UAL
-
-# Install dependencies
-pip install -r requirements.txt
+pip install ual-lang
 ```
 
-### 2. The "Great Demo"
+### 2. Verify & Explore (One-Command Integration)
 
-To prove UAL's universality, we have prepared a single script that simulates three distinct scenarios: **Smart Home**, **Industrial Factory**, and **Abstract Debate**.
+UAL provides a powerful CLI to help you integrate in seconds:
 
 ```bash
-python3 examples/the_great_demo.py
+# 🏥 Check if your environment is ready
+ual doctor
+
+# 🎬 Run a live demo of semantic encoding/decoding
+ual demo
+
+# 🚀 Generate a boilerplate agent script to start coding immediately
+ual init
 ```
 
-### 3. "Hello World" Code
+### 3. "Hello World" Code Example
+
+After running `ual init`, you will get a `my_agent.py`. Here is what it looks like:
 
 ```python
 from ual import UAL

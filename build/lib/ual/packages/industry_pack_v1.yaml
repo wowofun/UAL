@@ -1,7 +1,0 @@
-concepts:
-  # Industrial Range (0x2000+)
-  0x2001: ["conveyor", "belt"]
-  0x2002: ["arm", "manipulator", "robot_arm"]
-  0x2003: ["weld", "fuse", "join"]
-  0x2004: ["drill", "bore"]
-  0x2005: ["inspect_qc", "check_quality"]

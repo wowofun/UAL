@@ -10,3 +10,8 @@ test_reports/images/scenario_complex_chain.png
 pytest_cache/
 .pytest_cache/
 
+# Distribution / Packaging
+dist/
+build/
+*.egg-info/
+

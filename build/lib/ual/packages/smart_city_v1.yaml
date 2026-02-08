@@ -1,7 +1,0 @@
-concepts:
-  # City Range (0x3000+)
-  0x3001: ["traffic_light", "signal"]
-  0x3002: ["sensor", "detector"]
-  0x3003: ["camera", "cctv"]
-  0x3004: ["intersection", "junction"]
-  0x3005: ["pedestrian", "walker"]

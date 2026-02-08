@@ -5,6 +5,7 @@ import random
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
+from deep_translator import GoogleTranslator
 
 # Load environment variables from .env file
 load_dotenv(os.path.join(os.path.dirname(__file__), '../../../.env'))
@@ -167,6 +168,22 @@ def generate_graph():
     if not text:
         return jsonify({"error": "No text provided"}), 400
         
+    # [Auto-Translation] Support multi-language input
+    # If the user inputs non-English text (e.g., Chinese), translate it to English
+    # so the LLM/Compiler can process it using the standard Atlas.
+    original_text = text
+    try:
+        # 'auto' detection is robust for major languages like zh-CN, es, fr, etc.
+        translator = GoogleTranslator(source='auto', target='en')
+        translated_text = translator.translate(text)
+        
+        if translated_text and translated_text.lower() != text.lower():
+            print(f"🌍 [Translation] '{text}' -> '{translated_text}'")
+            text = translated_text
+    except Exception as e:
+        print(f"⚠️ Translation failed: {e}")
+        # Fallback to original text if translation API fails
+        
     # Get Atlas Concepts for LLM Context
     concepts = []
     for sem_id, name in atlas._id_to_concept.items():
@@ -222,4 +239,4 @@ def get_color_for_cat(category):
     return '#fff'
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5001)
